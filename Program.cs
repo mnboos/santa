@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Device.Location;
 using System.IO;
@@ -14,29 +15,32 @@ namespace SantasJourney
   {
     static void Main(string[] args)
     {
-      var distances = new Dictionary<string, double>();
       var allItems = CsvLoader.Load();
       double totalNrDistances = (double)allItems.Length*(double)allItems.Length/2.0;
+
+      var distances = new ConcurrentDictionary<string, float>();
       for (int i = 0; i < allItems.Length; i++)
       {
-        for (int j = 0; j < allItems.Length; j++)
+        for (int j = i+1; j < allItems.Length; j++)
         {
-          if (i == j)
-            continue;
+          //if (i == j)
+            //continue;
 
           var i1 = allItems[i];
           var i2 = allItems[j];
 
           string id = $"{Math.Min(i1.Id, i2.Id)};{Math.Max(i1.Id, i2.Id)}";
 
-          if (distances.ContainsKey(id))
-            continue;
+          //if (distances.ContainsKey(id))
+            //continue;
 
-          distances[id] = i1.Location.GetDistanceTo(i2.Location);
-          
+          if (!distances.TryAdd(id, (float)i1.Location.GetDistanceTo(i2.Location)))
+            throw new Exception("that should never happen");
+
+          //distances[id] = i1.Location.GetDistanceTo(i2.Location);
         }
         var progress = 100.0 / totalNrDistances * distances.Count;
-        Console.WriteLine($"Progress: {progress*100} %");
+        Console.WriteLine($"Progress: {progress * 100} %");
       }
     }
   }
