@@ -13,7 +13,7 @@ namespace SantasJourney
 {
   class Program
   {
-    const int CMaxWeight = 1000;
+    const double CMaxWeight = 1000.0;
 
     private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd)
     {
@@ -51,13 +51,12 @@ namespace SantasJourney
       {
         using (var writer = new StreamWriter(fs))
         {
-          writer.WriteLine("TourId;GiftIds");
+          writer.WriteLine("TourId;GiftIds;TotalWeight;Weights");
           int tourCount = 0;
           while (allItems.Any())
           {
             List<Item> tour = new List<Item>();
             double weight = 0;
-
             
             while (weight < CMaxWeight)
             {
@@ -72,14 +71,23 @@ namespace SantasJourney
               tour.Add(itemToAdd);
             }
 
-            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Tour weight: {weight}");
-            StringBuilder sb = new StringBuilder();
+            
+            var ids = new StringBuilder();
+            var weights = new StringBuilder();
             foreach (var tourItem in tour)
             {
-              sb.Append($"{tourItem.Id},");
+              ids.Append($"{tourItem.Id},");
+              weights.Append($"{tourItem.Weight}+");
             }
-            var giftIds = sb.ToString().Trim(',');
-            writer.WriteLine($"{tourCount++};{giftIds}");
+            var giftIds = ids.ToString().Trim(',');
+            var giftWeights = weights.ToString().Trim('+');
+
+            var line = $"{tourCount++};{giftIds};{weight};{giftWeights}";
+
+            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}");
+
+            //Console.ReadLine();
+            writer.WriteLine(line);
             writer.Flush();
           }
         }
