@@ -1,0 +1,1 @@
+\copy landmarks(giftid,latitude,longitude, weight) FROM 'C:\Users\boosm\OneDrive\_MSE\HS1617\Alg\santa\gifts.csv' DELIMITERS ';' CSV HEADER;
