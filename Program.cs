@@ -15,9 +15,10 @@ namespace SantasJourney
   {
     const double CMaxWeight = 1000.0;
 
-    private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd)
+    private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd, out double distance)
     {
       itemToAdd = new Item();
+      distance = 0;
       double minDistance = double.MaxValue;
       bool anyFound = false;
       foreach (var item in availableItems)
@@ -28,6 +29,7 @@ namespace SantasJourney
           if (dist < minDistance)
           {
             minDistance = dist;
+            distance = dist;
             itemToAdd = item;
             anyFound = true;
           }
@@ -51,22 +53,25 @@ namespace SantasJourney
       {
         using (var writer = new StreamWriter(fs))
         {
-          writer.WriteLine("TourId;GiftIds;TotalWeight;Weights");
+          writer.WriteLine("Tour;Length;GiftIds;TotalWeight;Weights");
           int tourCount = 0;
           while (allItems.Any())
           {
             List<Item> tour = new List<Item>();
             double weight = 0;
+            double length = 0;
             
             while (weight < CMaxWeight)
             {
               GeoCoordinate lastPosition = tour.Count > 0 ? tour.Last().Location : northPole;
               Item itemToAdd;
-              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd))
+              double distance;
+              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd, out distance))
                 break;
 
               allItems.Remove(itemToAdd);
 
+              length += distance;
               weight += itemToAdd.Weight;
               tour.Add(itemToAdd);
             }
@@ -82,9 +87,9 @@ namespace SantasJourney
             var giftIds = ids.ToString().Trim(',');
             var giftWeights = weights.ToString().Trim('+');
 
-            var line = $"{tourCount++};{giftIds};{weight};{giftWeights}";
+            var line = $"{tourCount++};{length};{giftIds};{weight};{giftWeights}";
 
-            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}");
+            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}, Length: {length}");
 
             //Console.ReadLine();
             writer.WriteLine(line);
