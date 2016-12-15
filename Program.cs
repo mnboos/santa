@@ -13,7 +13,7 @@ namespace SantasJourney
 {
   class Program
   {
-    const double CMaxWeight = 1000.0;
+    
 
     private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd, out double distance)
     {
@@ -23,7 +23,7 @@ namespace SantasJourney
       bool anyFound = false;
       foreach (var item in availableItems)
       {
-        if (currentWeight + item.Weight <= CMaxWeight)
+        if (currentWeight + item.Weight <= Tour.CMaxWeight)
         {
           var dist = lastLocation.GetDistanceTo(item.Location);
           if (dist < minDistance)
@@ -61,7 +61,7 @@ namespace SantasJourney
             double weight = 0;
             double length = 0;
             
-            while (weight < CMaxWeight)
+            while (weight < Tour.CMaxWeight)
             {
               GeoCoordinate lastPosition = tour.Count > 0 ? tour.Last().Location : northPole;
               Item itemToAdd;
@@ -75,7 +75,6 @@ namespace SantasJourney
               weight += itemToAdd.Weight;
               tour.Add(itemToAdd);
             }
-
             
             var ids = new StringBuilder();
             var weights = new StringBuilder();
@@ -91,7 +90,6 @@ namespace SantasJourney
 
             Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}, Length: {length}");
 
-            //Console.ReadLine();
             writer.WriteLine(line);
             writer.Flush();
           }
