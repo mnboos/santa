@@ -98,6 +98,12 @@ namespace SantasJourney
           }
         }
       }
+      if (bestWeariness < ReindeerWeariness)
+      {
+        ReindeerWeariness = bestWeariness;
+        _items.Clear();
+        _items.AddRange(tourCopy);
+      }
     }
 
     private void Swap(int i1, int i2, List<Item> items)
