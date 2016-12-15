@@ -36,18 +36,60 @@ namespace SantasJourney
     /// </summary>
     public void UpdateReindeerWeariness()
     {
+      var weariness = GetWeariness(_items);
+
+      ReindeerWeariness = weariness;
+    }
+
+    private double GetWeariness(List<Item> items)
+    {
       double remainingWeight = _weight + SledBaseWeight;
       double weariness = 0;
       var previousLocation = NorthPole;
-      foreach (var item in _items)
+      foreach (var item in items)
       {
         weariness += remainingWeight*previousLocation.GetDistanceTo(item.Location);
         previousLocation = item.Location;
         remainingWeight -= item.Weight;
       }
-      weariness += SledBaseWeight*_items.Last().Location.GetDistanceTo(NorthPole);
+      weariness += SledBaseWeight*items.Last().Location.GetDistanceTo(NorthPole);
+      return weariness;
+    }
 
-      ReindeerWeariness = weariness;
+    public void OptimizeTwoOpt()
+    {
+      var tourCopy = _items.ToList();
+      double bestWeariness = ReindeerWeariness;
+      bool hasImproved = true;
+      while (hasImproved)
+      {
+        hasImproved = false;
+
+        for (int i = 0; i < tourCopy.Count; i++)
+        {
+          for (int j = i + 1; j < tourCopy.Count; j++)
+          {
+            Swap(i, j, tourCopy);
+            var newWeariness = GetWeariness(tourCopy);
+            if (newWeariness <= bestWeariness)
+            {
+              bestWeariness = newWeariness;
+              hasImproved = true;
+            }
+            else
+            {
+              Swap(i, j, tourCopy);
+            }
+          }
+        }
+      }
+    }
+
+    private void Swap(int i1, int i2, List<Item> items)
+    {
+      var temp = items[i1];
+      items[i1] = items[i2];
+      items[i2] = temp;
     }
   }
 }
