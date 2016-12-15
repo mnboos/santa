@@ -56,6 +56,21 @@ namespace SantasJourney
       return weariness;
     }
 
+    public void OptimizeByWeightedDistance()
+    {
+      var sorted = _items
+        .OrderByDescending(i => NorthPole.GetDistanceTo(i.Location)/i.Weight)
+        .ToList();
+
+      var weariness = GetWeariness(sorted);
+      if (weariness < ReindeerWeariness)
+      {
+        _items.Clear();
+        _items.AddRange(sorted);
+        ReindeerWeariness = weariness;
+      }
+    }
+
     public void OptimizeTwoOpt()
     {
       var tourCopy = _items.ToList();

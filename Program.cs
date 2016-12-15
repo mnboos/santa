@@ -13,8 +13,6 @@ namespace SantasJourney
 {
   class Program
   {
-    
-
     private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd, out double distance)
     {
       itemToAdd = new Item();
@@ -40,64 +38,14 @@ namespace SantasJourney
 
     static void Main(string[] args)
     {
-      var allItems = new List<Item>(CsvLoader.Load());
-      //double totalNrDistances = (double)allItems.Count*(double)allItems.Count / 2.0;
+      return;
 
+      var allItems = new List<Item>(CsvLoader.Load());
       var northPole = new GeoCoordinate(90, 0);
 
-      //var allTours = new ConcurrentBag<List<Item>>();
+      GenerateInitialTours(allItems, northPole);
 
-      var n = DateTime.Now;
-      var time = $"{n.Date.ToShortDateString()}_{n.Hour}.{n.Minute}.{n.Second}";
-      using (var fs = new FileStream($@"..\..\tours_{time}.csv", FileMode.Create, FileAccess.Write))
-      {
-        using (var writer = new StreamWriter(fs))
-        {
-          writer.WriteLine("Tour;Length;GiftIds;TotalWeight;Weights");
-          int tourCount = 0;
-          while (allItems.Any())
-          {
-            List<Item> tour = new List<Item>();
-            double weight = 0;
-            double length = 0;
-            
-            while (weight < Tour.CMaxWeight)
-            {
-              GeoCoordinate lastPosition = tour.Count > 0 ? tour.Last().Location : northPole;
-              Item itemToAdd;
-              double distance;
-              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd, out distance))
-                break;
-
-              allItems.Remove(itemToAdd);
-
-              length += distance;
-              weight += itemToAdd.Weight;
-              tour.Add(itemToAdd);
-            }
-            
-            var ids = new StringBuilder();
-            var weights = new StringBuilder();
-            foreach (var tourItem in tour)
-            {
-              ids.Append($"{tourItem.Id},");
-              weights.Append($"{tourItem.Weight}+");
-            }
-            var giftIds = ids.ToString().Trim(',');
-            var giftWeights = weights.ToString().Trim('+');
-
-            var line = $"{tourCount++};{length};{giftIds};{weight};{giftWeights}";
-
-            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}, Length: {length}");
-
-            writer.WriteLine(line);
-            writer.Flush();
-          }
-        }
-      }
-
-      
-
+      //double totalNrDistances = (double)allItems.Count*(double)allItems.Count / 2.0;
       //long count = 0;
       //var distances1 = new Dictionary<string, float>();
       //var distances2 = new Dictionary<string, float>();
@@ -138,42 +86,57 @@ namespace SantasJourney
       Console.WriteLine("Complete.. presse any key");
       Console.ReadLine();
     }
-  }
 
-  public class CsvLoader
-  {
-    public static Item[] Load()
+    private static void GenerateInitialTours(List<Item> allItems, GeoCoordinate northPole)
     {
-      var content = File.ReadAllLines(@"..\..\..\Assets\gifts.csv").Skip(1).ToArray();
-
-      var items = new Item[content.Length];
-
-      Parallel.For(0, content.Length, (i) =>
+      var n = DateTime.Now;
+      var time = $"{n.Date.ToShortDateString()}_{n.Hour}.{n.Minute}.{n.Second}";
+      using (var fs = new FileStream($@"..\..\tours_{time}.csv", FileMode.Create, FileAccess.Write))
       {
-        var line = content[i];
-        var v = line.Split(';');
-        var id = int.Parse(v[0]);
-        var lat = double.Parse(v[1]);
-        var lng = double.Parse(v[2]);
-        var weight = double.Parse(v[3]);
-        items[i] = new Item(id, lat, lng, weight);
-      });
-      return items;
+        using (var writer = new StreamWriter(fs))
+        {
+          writer.WriteLine(TourLoader.CHeaders);
+          int tourCount = 0;
+          while (allItems.Any())
+          {
+            List<Item> tour = new List<Item>();
+            double weight = 0;
+            double length = 0;
+
+            while (weight < Tour.CMaxWeight)
+            {
+              GeoCoordinate lastPosition = tour.Count > 0 ? tour.Last().Location : northPole;
+              Item itemToAdd;
+              double distance;
+              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd, out distance))
+                break;
+
+              allItems.Remove(itemToAdd);
+
+              length += distance;
+              weight += itemToAdd.Weight;
+              tour.Add(itemToAdd);
+            }
+
+            var ids = new StringBuilder();
+            var weights = new StringBuilder();
+            foreach (var tourItem in tour)
+            {
+              ids.Append($"{tourItem.Id},");
+              weights.Append($"{tourItem.Weight}+");
+            }
+            var giftIds = ids.ToString().Trim(',');
+            var giftWeights = weights.ToString().Trim('+');
+
+            var line = $"{tourCount++};{length};{giftIds};{weight};{giftWeights}";
+
+            Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}, Length: {length}");
+
+            writer.WriteLine(line);
+            writer.Flush();
+          }
+        }
+      }
     }
-  }
-
-  public struct Item
-  {
-    public Item(int id, double lat, double lng, double weight)
-    {
-      Id = id;
-      Weight = weight;
-      Location = new GeoCoordinate(lat, lng);
-    }
-
-    public int Id;
-
-    public GeoCoordinate Location { get; }
-    public double Weight { get; }
   }
 }
