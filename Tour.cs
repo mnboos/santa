@@ -19,8 +19,11 @@ namespace SantasJourney
 
     public double ReindeerWeariness { get; private set; }
 
-    public Tour(IEnumerable<Item> items)
+    public int Id { get; }
+
+    public Tour(int id, IEnumerable<Item> items)
     {
+      Id = id;
       _items = items.ToList();
       _weight = _items.Sum(i => i.Weight);
       if (_weight > CMaxWeight)
@@ -59,6 +62,7 @@ namespace SantasJourney
     public void OptimizeByWeightedDistance()
     {
       var sorted = _items
+        //.OrderByDescending(i => i.Weight)
         .OrderByDescending(i => NorthPole.GetDistanceTo(i.Location)/i.Weight)
         .ToList();
 
