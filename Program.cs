@@ -13,34 +13,48 @@ namespace SantasJourney
 {
   class Program
   {
-    private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd, out double distance)
+    private static bool GetNearestFittingNeighbour(GeoCoordinate lastLocation, double currentWeight, List<Item> availableItems, out Item itemToAdd, out double distance, bool isLatConstraintActive)
     {
+      var candidates = availableItems
+        .AsParallel()
+        .Where(item => currentWeight + item.Weight <= Tour.CMaxWeight
+                       && (!isLatConstraintActive || item.Location.Latitude < lastLocation.Latitude))
+        .Select(item => new { Item = item, Distance = item.Location.GetDistanceTo(lastLocation) })
+        .ToList();
+
       itemToAdd = new Item();
       distance = 0;
       double minDistance = double.MaxValue;
       bool anyFound = false;
-      foreach (var item in availableItems)
+      foreach (var tuple in candidates)
       {
-        if (currentWeight + item.Weight <= Tour.CMaxWeight)
-        {
-          var dist = lastLocation.GetDistanceTo(item.Location);
+        //if (currentWeight + item.Weight <= Tour.CMaxWeight)
+        //{
+        var dist = tuple.Distance;
           if (dist < minDistance)
           {
             minDistance = dist;
             distance = dist;
-            itemToAdd = item;
+            itemToAdd = tuple.Item;
             anyFound = true;
           }
-        }
+        //}
       }
       return anyFound;
     }
 
     static void Main(string[] args)
     {
+      int? nrTours = 1;
+      var allItems = new List<Item>(CsvLoader.Load());
+      var loader = new TourLoader(allItems);
+      var allTours = loader.Load(@"..\..\tours_15.12.2016_16.48.37.csv", nrTours).ToList();
+
+      Parallel.ForEach(allTours, t => t.UpdateReindeerWeariness());
+
       return;
 
-      var allItems = new List<Item>(CsvLoader.Load());
+      //var allItems = new List<Item>(CsvLoader.Load());
       var northPole = new GeoCoordinate(90, 0);
 
       GenerateInitialTours(allItems, northPole);
@@ -103,13 +117,20 @@ namespace SantasJourney
             double weight = 0;
             double length = 0;
 
+            bool latitueConstraintActive = true;
             while (weight < Tour.CMaxWeight)
             {
               GeoCoordinate lastPosition = tour.Count > 0 ? tour.Last().Location : northPole;
               Item itemToAdd;
               double distance;
-              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd, out distance))
-                break;
+              if (!GetNearestFittingNeighbour(lastPosition, weight, allItems, out itemToAdd, out distance, latitueConstraintActive))
+              {
+                if (!latitueConstraintActive)
+                  break;
+
+                latitueConstraintActive = false;
+                continue;
+              }
 
               allItems.Remove(itemToAdd);
 
@@ -120,15 +141,18 @@ namespace SantasJourney
 
             var ids = new StringBuilder();
             var weights = new StringBuilder();
+            var coords = new StringBuilder();
             foreach (var tourItem in tour)
             {
               ids.Append($"{tourItem.Id},");
               weights.Append($"{tourItem.Weight}+");
+              coords.Append($"{tourItem.Location.Latitude} {tourItem.Location.Longitude},");
             }
             var giftIds = ids.ToString().Trim(',');
+            var coordinates = coords.ToString().Trim(',');
             var giftWeights = weights.ToString().Trim('+');
 
-            var line = $"{tourCount++};{length};{giftIds};{weight};{giftWeights}";
+            var line = $"{tourCount++};{length};{giftIds};{weight};{giftWeights};{coordinates}";
 
             Console.WriteLine($"{DateTime.Now}: Remaining items: {allItems.Count}, Weight: {weight}, Length: {length}");
 

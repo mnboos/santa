@@ -17,6 +17,8 @@ namespace SantasJourney
     private readonly List<Item> _items;
     private double _weight;
 
+    public List<Item> Items => _items;
+
     public double ReindeerWeariness { get; private set; }
 
     public int Id { get; }
@@ -110,11 +112,56 @@ namespace SantasJourney
       }
     }
 
+    public void Optimize3Opt()
+    {
+      var tourCopy = _items.ToList();
+      double bestWeariness = ReindeerWeariness;
+      bool hasImproved = true;
+      while (hasImproved)
+      {
+        hasImproved = false;
+
+        for (int i = 0; i < tourCopy.Count; i++)
+        {
+          for (int j = i + 1; j < tourCopy.Count; j++)
+          {
+            for (int k = j + 1; k < tourCopy.Count; k++)
+            {
+              Swap(i, j, k, tourCopy);
+              var newWeariness = GetWeariness(tourCopy);
+              if (newWeariness <= bestWeariness)
+              {
+                bestWeariness = newWeariness;
+                hasImproved = true;
+              }
+              else
+              {
+                Swap(i, j, k, tourCopy);
+              }
+            }
+            
+          }
+        }
+      }
+      if (bestWeariness < ReindeerWeariness)
+      {
+        ReindeerWeariness = bestWeariness;
+        _items.Clear();
+        _items.AddRange(tourCopy);
+      }
+    }
+
     private void Swap(int i1, int i2, List<Item> items)
     {
       var temp = items[i1];
       items[i1] = items[i2];
       items[i2] = temp;
+    }
+
+    private void Swap(int i1, int i2, int i3, List<Item> items)
+    {
+      Swap(i1, i2, items);
+      Swap(i2, i3, items);
     }
   }
 }

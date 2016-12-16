@@ -10,7 +10,7 @@ namespace SantasJourney
 {
   public class TourLoader
   {
-    public const string CHeaders = "Tour;Length;GiftIds;TotalWeight;Weights";
+    public const string CHeaders = "Tour;Length;GiftIds;TotalWeight;Weights;LatLong";
 
     private readonly List<Item> _availableItems;
 

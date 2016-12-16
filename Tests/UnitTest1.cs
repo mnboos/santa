@@ -10,6 +10,8 @@ namespace Tests
   [TestClass]
   public class UnitTest1
   {
+    private static string Filepath = @"..\..\..\tours_15.12.2016_16.48.37.csv";
+
     [TestMethod]
     public void TestSwap()
     {
@@ -27,7 +29,7 @@ namespace Tests
     {
       var allItems = new List<Item>(CsvLoader.Load());
       var loader = new TourLoader(allItems);
-      var allTours = loader.Load(@"..\..\..\Generated Tours_14.12.2016_21.12.9.csv");
+      var allTours = loader.Load(Filepath);
     }
 
     [TestMethod]
@@ -43,9 +45,9 @@ namespace Tests
 
     private double TestOptimization(Action<Tour> optimizer, out double totalWeariness, int? nrToursToLoad = null)
     {
-      var allItems = new List<Item>(CsvLoader.Load());
+      var allItems = new List<Item>(CsvLoader.Load(@"..\..\..\Assets\gifts.csv"));
       var loader = new TourLoader(allItems);
-      var allTours = loader.Load(@"..\..\..\Generated Tours_14.12.2016_21.12.9.csv", nrToursToLoad).ToList();
+      var allTours = loader.Load(Filepath, nrToursToLoad).ToList();
 
       Parallel.ForEach(allTours, t => t.UpdateReindeerWeariness());
 

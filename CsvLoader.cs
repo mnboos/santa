@@ -9,9 +9,9 @@ namespace SantasJourney
 {
   public class CsvLoader
   {
-    public static Item[] Load()
+    public static Item[] Load(string path = @"..\..\Assets\gifts.csv")
     {
-      var content = File.ReadAllLines(@"..\..\..\Assets\gifts.csv").Skip(1).ToArray();
+      var content = File.ReadAllLines(path).Skip(1).ToArray();
 
       var items = new Item[content.Length];
 
